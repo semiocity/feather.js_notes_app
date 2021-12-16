@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+   <head>
+        <meta charset="UTF-8">
+        <script defer src="/node_modules/@fortawesome/fontawesome-free/js/all.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200;300;400&display=swap" rel="stylesheet">
+        <link href="styles.css" rel="stylesheet">
+        <title>Application de prise de notes</title>
+   </head>
+   <body>
+        <h2>Notes</h2>
+        <div id ="main">
+            <div id="saved_notes">
+
+                        <td><h3>Mes notes</h3></td>
+                        <td><button id="new_note" type="submit"><i class="fas fa-plus-circle"></i></button></td>
+                    <ul id="note_list">
+                    </ul>
+                    
+                <!-- </table> -->
+                
+                
+            </div>
+            <div id="note_input">
+               <h3>Nouvelles notes</h3>
+               <!-- <div id="hide"> -->
+               <div>
+                     <textarea id="note" required="required"></textarea>
+                </br>
+                    <!-- <button id="save" type="submit"><i class="fas fa-check-square"></i></button> -->
+                    <button id = "save_note" type="submit">Save note</button>
+                    
+                </div>
+            </div>
+            <div id="note_display">
+            </div>
+        </div>
+        
+      
+
+   </body>
+</html>
+
+<script type="module">
+import io from './node_modules/socket.io-client'
+import feathers from './node_modules/@feathersjs/client'
+
+// Create a websocket connecting to Feathers server
+const socket = io('http://localhost:3030')
+const app = feathers()
+app.configure(feathers.socketio(socket))
+
+
+
+// async function displaySavedNote(note) {
+//    console.log("Display saved note")
+//    console.log(note)
+//    const note_input_area = document.getElementById("note")
+//    note_input_area.value = note.text
+// }
+
+async function loadNote(id){
+   const note = await app.service('notes').get(id)
+   console.log("ID:", id)
+   console.log("note:", note)
+   return note
+}
+
+async function displayAllNotes () {
+   const noteList = document.getElementById("note_list")
+   noteList.innerHTML=''
+   const notes = await app.service('notes').find({})
+   console.log("Avant la moulinette d'affichage")
+
+   // Moulinette d'affichage des en-têtes de notes
+   notes.forEach (note => {
+      const noteElement = document.createElement('li')
+      noteElement.innerText = note.text.split("\n")[0]
+      noteElement.id = note.id
+      noteElement.addEventListener ('click', async (ev) => {
+         current_note_id = note.id
+         const note_data = await loadNote(noteElement.id)
+         // displaySavedNote(note)
+         displayInputArea(note_data)
+
+      }
+      )
+      const deleteButton = document.createElement('button')
+      deleteButton.innerText = "Supprimer"
+      deleteButton.addEventListener('click', async (ev) => {
+         await app.service('notes').remove(note.id)
+         displayAllNotes()
+      })
+      noteElement.appendChild(deleteButton)
+      noteList.appendChild(noteElement)
+   })
+   //Add event listener to the new note button
+   const newNoteButton = document.getElementById("new_note")
+   newNoteButton.addEventListener('click', ev => {
+      console.log("click")
+      const note_input_area = document.getElementById("note")
+      note_input_area.value = ""
+      // old_displayInputArea()
+      // note_input_area.innerHTML = ""
+      // note_display_area.classList.add("hide")
+      // const note_field = document.getElementById("note")
+      // note_field.value = ""
+
+
+   })
+
+
+
+}
+
+function displayInputArea(note)
+{
+   const note_area = document.getElementById("note")
+console.log ("Editing note:", note)
+
+   if (note.id) {
+   note_area.value = note.text
+   }
+   else {
+      note_area.value = ""
+   }
+
+
+}
+
+function old_displayInputArea(editing_note)
+{
+   const note_area = document.getElementById("note")
+
+
+   try
+   {
+      saveNoteButton.removeEventListener('click', _on_click)
+      console.log("Listener enlevé")
+   }
+   finally {}
+   if (editing_note) {
+   note_area.value = note.text
+   }
+   else {
+      note_area.value = ""
+   }
+
+   console.log("Listener ajouté")
+
+}
+
+// Listen to new notes being created
+app.service('notes').on('created', displayAllNotes)
+
+
+const noteInput = document.querySelector('textarea')
+const saveNoteButton = document.getElementById("save_note")
+let current_note_id = undefined
+
+function _on_save() {
+   // Create a new item
+   if (!current_note_id)
+   {
+      console.log("Click, not editing!!!")
+      app.service('notes').create({ text: noteInput.value })
+      noteInput.value = ''
+   }
+   else
+   {
+      console.log("Trying to edit note")
+      console.log("current_note_id", current_note_id)
+      console.log("noteInput.value", noteInput.value)
+      
+      app.service('notes').patch(current_note_id, {text: noteInput.value })
+      noteInput.value = ''
+   }
+   console.log("Display saved note")
+   console.log(note)
+
+   // const new_note_area = document.getElementById("note_input")
+   // new_note_area.classList.add("hide")
+   }
+
+
+window.addEventListener("load", load => {
+   // mode = 
+   console.log("Page rechargée")
+   const new_note_area = document.getElementById("note_input")
+   // new_note_area.classList.add("hide")
+   let editing_note = false
+   displayInputArea(editing_note)
+   displayAllNotes()
+   saveNoteButton.addEventListener('click', _on_save)
+})
+
+</script>
