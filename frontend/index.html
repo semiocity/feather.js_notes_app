@@ -23,11 +23,11 @@
                 
                 
             </div>
-            <div id="note_input">
-               <h3>Nouvelles notes</h3>
+            <div id="note_input_area">
+               <!-- <h3>Nouvelles notes</h3> -->
                <!-- <div id="hide"> -->
                <div>
-                     <textarea id="note" required="required"></textarea>
+                     <textarea id="note_area" required="required"></textarea>
                 </br>
                     <!-- <button id="save" type="submit"><i class="fas fa-check-square"></i></button> -->
                     <button id = "save_note" type="submit">Save note</button>
@@ -69,20 +69,24 @@ async function loadNote(id){
 }
 
 async function displayAllNotes () {
-   const noteList = document.getElementById("note_list")
-   noteList.innerHTML=''
+   const note_list = document.getElementById("note_list")
+   note_list.innerHTML=''
    const notes = await app.service('notes').find({})
    console.log("Avant la moulinette d'affichage")
 
    // Moulinette d'affichage des en-têtes de notes
+   if (notes.size === 0) {
+      current_note_id = undefined
+   }
    notes.forEach (note => {
       const noteElement = document.createElement('li')
       noteElement.innerText = note.text.split("\n")[0]
       noteElement.id = note.id
       noteElement.addEventListener ('click', async (ev) => {
-         current_note_id = note.id
+         // current_note_id = note.id
          const note_data = await loadNote(noteElement.id)
          // displaySavedNote(note)
+         note_input_area.classList.remove("hide")
          displayInputArea(note_data)
 
       }
@@ -91,17 +95,30 @@ async function displayAllNotes () {
       deleteButton.innerText = "Supprimer"
       deleteButton.addEventListener('click', async (ev) => {
          await app.service('notes').remove(note.id)
+         console.log("note.id",note.id)
+         console.log("current_note_id", current_note_id)
+         if (note.id === current_note_id) {
+            console.log("note.id === current_note_id")
+            current_note_id = undefined
+         }
+         else {
+            console.log("Ouillle!!!!!!!")
+         }
          displayAllNotes()
+         displayInputArea(current_note_id)
       })
       noteElement.appendChild(deleteButton)
-      noteList.appendChild(noteElement)
+      note_list.appendChild(noteElement)
    })
    //Add event listener to the new note button
    const newNoteButton = document.getElementById("new_note")
    newNoteButton.addEventListener('click', ev => {
       console.log("click")
-      const note_input_area = document.getElementById("note")
-      note_input_area.value = ""
+      // const note_input_area = document.getElementById("note")
+      note_area.value = ""
+      new_note_placeholder.value = "Type in your new note here..."
+      note_area.setAttributeNode(new_note_placeholder)
+      note_input_area.classList.remove("hide")
       // old_displayInputArea()
       // note_input_area.innerHTML = ""
       // note_display_area.classList.add("hide")
@@ -117,47 +134,28 @@ async function displayAllNotes () {
 
 function displayInputArea(note)
 {
-   const note_area = document.getElementById("note")
+   // const note_area = document.getElementById("note_area")
 console.log ("Editing note:", note)
 
-   if (note.id) {
-   note_area.value = note.text
+   try {
+      (current_note_id = note.id) && (note_area.value = note.text)
    }
-   else {
+   catch {
       note_area.value = ""
    }
 
 
 }
 
-function old_displayInputArea(editing_note)
-{
-   const note_area = document.getElementById("note")
-
-
-   try
-   {
-      saveNoteButton.removeEventListener('click', _on_click)
-      console.log("Listener enlevé")
-   }
-   finally {}
-   if (editing_note) {
-   note_area.value = note.text
-   }
-   else {
-      note_area.value = ""
-   }
-
-   console.log("Listener ajouté")
-
-}
 
 // Listen to new notes being created
 app.service('notes').on('created', displayAllNotes)
 
-
-const noteInput = document.querySelector('textarea')
+const note_input_area = document.getElementById("note_input_area")
+const note_area = document.getElementById("note_area")
 const saveNoteButton = document.getElementById("save_note")
+const new_note_placeholder = document.createAttribute("placeholder")
+
 let current_note_id = undefined
 
 function _on_save() {
@@ -165,31 +163,30 @@ function _on_save() {
    if (!current_note_id)
    {
       console.log("Click, not editing!!!")
-      app.service('notes').create({ text: noteInput.value })
-      noteInput.value = ''
+      app.service('notes').create({ text: note_area.value })
+      note_area.value = ''
    }
    else
    {
       console.log("Trying to edit note")
       console.log("current_note_id", current_note_id)
-      console.log("noteInput.value", noteInput.value)
+      console.log("note_area.value", note_area.value)
       
-      app.service('notes').patch(current_note_id, {text: noteInput.value })
-      noteInput.value = ''
+      app.service('notes').patch(current_note_id, {text: note_area.value })
+      note_area.value = ''
    }
-   console.log("Display saved note")
-   console.log(note)
-
-   // const new_note_area = document.getElementById("note_input")
-   // new_note_area.classList.add("hide")
-   }
+   current_note_id = undefined
+   note_input_area.classList.add("hide")
+   // console.log("Display saved note")
+   // console.log(note)
+}
 
 
 window.addEventListener("load", load => {
    // mode = 
    console.log("Page rechargée")
-   const new_note_area = document.getElementById("note_input")
-   // new_note_area.classList.add("hide")
+   // const new_note_area = document.getElementById("note_input")
+   note_input_area.classList.add("hide")
    let editing_note = false
    displayInputArea(editing_note)
    displayAllNotes()

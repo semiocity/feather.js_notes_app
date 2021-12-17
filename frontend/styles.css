@@ -14,7 +14,7 @@ body{
     border-right: 1px solid #000;
     }
 
-#note_input {
+#note_input_area {
     width:400px;
     padding: 20px;
     min-height:150px;
@@ -34,25 +34,31 @@ button {
     background-color: #fff;
     cursor : pointer;
 }
+
 textarea {
     width: 300px;
     min-height:200px;
 }
-/* .hide {
+
+.hide {
     display: none;
-} */
+}
+
 .fa-check-square {
     color: forestgreen;
     font-size:xx-large;
 }
+
 .fa-plus-circle{
     color: rgb(20, 198, 243);
     font-size:xx-large;
 }
+
 .fa-trash-alt{
     color:crimson;
     font-size:large;
 }
+
 div .note{
     border: grey 1px solid;
     border-radius: 10px;
